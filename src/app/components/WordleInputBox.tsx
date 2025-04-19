@@ -19,13 +19,26 @@ export default function WordleInputBox() {
         inputRefs.current[index]?.focus();
     }
 
-    const handleOnKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
+    const handleOnKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
         const key = e.key;
         const newWord = [...word]
 
         if (key === "Enter" && word[4] !== "") {
             console.log("Enter pressed!");
             console.log("word:", word);
+            try {
+                const res = await fetch("/api/word", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        word: word
+                    })
+                });
+            } catch (error) {
+                console.log(error);
+            }
         } else if (key === "Backspace") {
             if (word[idx] === "") {
                 idx--;

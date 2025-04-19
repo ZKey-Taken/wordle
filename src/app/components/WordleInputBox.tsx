@@ -1,9 +1,13 @@
 "use client"
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react"
+import Swal from "sweetalert2";
+import { generateWord } from "../page";
 
 export default function WordleInputBox() {
     const [word, setWord] = useState(["", "", "", "", ""]);
     const inputRefs = useRef<HTMLInputElement[] | null[]>([]);
+    const router = useRouter();
 
     const handleFormClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -36,8 +40,30 @@ export default function WordleInputBox() {
                     })
                 });
                 const data = await res.json();
-                if ("status" in data && data.status === 200 && "gameover" in data && data.gameover) {
-
+                if ("status" in data && data.status === 200 && "gameover" in data && data.gameover !== 0) {
+                    let title = "", text = "";
+                    if (data.gameover === 1) {
+                        title = "You got it!";
+                        text = "You took " + data.guesses + " tries";
+                    } else if (data.gameover === 2) {
+                        title = "Unfortunate!";
+                        text = "The word was " + data.word;
+                    }
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        confirmButtonText: "Play again?",
+                        showDenyButton: true,
+                        denyButtonText: "Back to Home",
+                        denyButtonColor: "#3085d6",
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            generateWord();
+                            router.refresh();
+                        } else {
+                            router.push('/');
+                        }
+                    });
                 }
             } catch (error) {
                 console.log(error);

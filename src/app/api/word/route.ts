@@ -67,11 +67,11 @@ export async function POST(req: Request) {
             }
         }
 
-        let gameover = false;
+        let gameover = 0; // 0 = not over, 1 = win, 2 = lose
         if (correctness[0] === "Green" && correctness[1] === "Green" && correctness[2] === "Green" &&
             correctness[3] === "Green" && correctness[4] === "Green"
         ) {
-            gameover = true;
+            gameover = 1;
         }
 
         const guessesCookie = (await cookie).get("Guesses");
@@ -81,25 +81,31 @@ export async function POST(req: Request) {
             const guessesArr: string[] = JSON.parse(guessesCookie.value);
             const correctnessArr: string[][] = JSON.parse(correctnessCookie.value);
 
-            if (guessesArr.length === 5) {
-                gameover = true;
+            if (guessesArr.length === 5 && gameover !== 1) {
+                gameover = 2;
             }
 
             (await cookie).set("Guesses", JSON.stringify([...guessesArr, givenWord]));
             (await cookie).set("Correctness", JSON.stringify([...correctnessArr, correctness]));
 
-            if (gameover) {
+            if (gameover !== 0) {
                 (await cookie).delete("WordIndex");
                 (await cookie).delete("Guesses");
                 (await cookie).delete("Correctness");
-                return NextResponse.json({ guessesArr: guessesArr, correctnessArr: correctnessArr, gameover: gameover, status: 200 });
+                return NextResponse.json({ guesses: guessesArr.length.toString(), word: word, gameover: gameover, status: 200 });
             }
         }
 
-        return NextResponse.json({ correctness: correctness, gameover: gameover, status: 200 });
+        return NextResponse.json({ correctness: correctness, gameover: 0, status: 200 });
     } catch (error) {
         console.log(error);
     }
 
     return NextResponse.json({ correctness: correctness, status: 500 });
 }
+
+/* Bugs to fix:
+Enters an invalid 5 letter word
+Enters the same word multiple times
+Yellow is too vague and incorrect
+*/

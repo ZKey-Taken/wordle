@@ -5,6 +5,7 @@ import { words } from "popular-english-words/words.js";
 const guessWords = words.slice(0, 80000);
 const fiveLetterWordArray = words.slice(0, 20000).filter(word => word.length === 5);
 
+// Verifies data and ensure it's a word that's a string
 const getWordData = (data: unknown) => {
     if (data !== null && typeof data === "object" && "word" in data && typeof data.word === "string") {
         return data.word;
@@ -12,6 +13,7 @@ const getWordData = (data: unknown) => {
     return null;
 }
 
+// Runs for loops to construct an array for feedback, green for correct, yellow for exists, and gray for not exist
 const checkWordle = (givenWord: string, correctWord: string) => {
     const correctness: string[] = Array(5).fill("Gray");
     const usedLetter = Array(5).fill(false);
@@ -38,6 +40,8 @@ const checkWordle = (givenWord: string, correctWord: string) => {
     return correctness
 }
 
+// GET sets up the randomized index we will use to identify out word. The word list is static so we can just
+// store an index and get the word when needed, frontend/user won't know the word.
 export async function GET() {
     try {
         const cookie = cookies();
@@ -70,9 +74,15 @@ export async function GET() {
     return NextResponse.json({ status: 500 });
 }
 
+// POST does the heavy lifting of the wordle
+// It obtains the user's word and verifies and constructs feedback based on the secret word.
+// It returns many different things, allowing us to identify correctness, how many guesses, did the user win/lose,
+// is the word user entered a valid word, and did the user enter a word that's already guessed.
+// And it resets the cookies once the game is over.
 export async function POST(req: Request) {
     let correctness: string[] = [];
     try {
+        // Establishes variables
         const data = await req.json();
         const givenWord = getWordData(data)?.toLowerCase();
         const cookie = cookies();
@@ -83,20 +93,20 @@ export async function POST(req: Request) {
         if (typeof index === "undefined" || typeof givenWord === "undefined"
             || typeof guessesCookie === "undefined" || typeof correctnessCookie === "undefined"
         ) {
-            return NextResponse.json({ correctness: correctness, status: 400 });
+            return NextResponse.json({ correctness: correctness, status: 400 }); // error, things not found
         }
 
         const guessesArr: string[] = JSON.parse(guessesCookie);
         const correctnessArr: string[][] = JSON.parse(correctnessCookie);
         const word = fiveLetterWordArray[parseInt(index)];
 
-        if (!guessWords.includes(givenWord)) {
+        if (!guessWords.includes(givenWord)) { // Not a valid word
             return NextResponse.json({ correctness: correctness, notValidWord: true, status: 400 });
-        } else if (guessesArr.includes(givenWord)) {
+        } else if (guessesArr.includes(givenWord)) { // Already guessed this word
             return NextResponse.json({ correctness: correctness, sameWord: true, status: 400 });
         }
 
-        correctness = checkWordle(givenWord, word);
+        correctness = checkWordle(givenWord, word); // verifies word
 
         let gameover = 0; // 0 = not over, 1 = win, 2 = lose
         if (correctness[0] === "Green" && correctness[1] === "Green" && correctness[2] === "Green" &&
@@ -107,10 +117,11 @@ export async function POST(req: Request) {
             gameover = 2;
         }
 
+        // Update cookies
         (await cookie).set("Guesses", JSON.stringify([...guessesArr, givenWord]));
         (await cookie).set("Correctness", JSON.stringify([...correctnessArr, correctness]));
 
-        if (gameover !== 0) {
+        if (gameover !== 0) { // reset cookies
             (await cookie).delete("WordIndex");
             (await cookie).delete("Guesses");
             (await cookie).delete("Correctness");

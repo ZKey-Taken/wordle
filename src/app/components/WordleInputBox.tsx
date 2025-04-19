@@ -5,10 +5,13 @@ import Swal from "sweetalert2";
 import { generateWord } from "../page";
 
 export default function WordleInputBox() {
+    // Uses useState to control the word and useRef to focus() to each input box.
     const [word, setWord] = useState(["", "", "", "", ""]);
     const inputRefs = useRef<HTMLInputElement[] | null[]>([]);
     const router = useRouter();
 
+    // Once user clicks on the form (5 input boxes), it automatically focuses to the correct input box allowing
+    // the user to type smoothly without pressing/clicking keys.
     const handleFormClick = (e: React.MouseEvent) => {
         e.preventDefault();
 
@@ -22,20 +25,27 @@ export default function WordleInputBox() {
         inputRefs.current[index]?.focus();
     }
 
+    // Does some action based on what key is pressed:
+    // Backspace, deletes the current input and goes to previous input
+    // Enter, submits and gets feedback on the word from backend
+    // Letter keys, updates word and moves onto next character box.
     const handleOnKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
         const key = e.key;
         const newWord = [...word]
 
         if (key === "Enter" && word[4] !== "") {
+            // Reset the input boxes to empty
             inputRefs.current.forEach((input, i) => {
                 if (input) {
                     input.value = "";
                     newWord[i] = "";
                 }
             });
+            // Change focus to the first input box
             inputRefs.current[0]?.focus();
 
             try {
+                // Sends POST to backend and wait for feedback
                 const w = word.join("").substring(0, 5);
                 const res = await fetch("/api/word", {
                     method: "POST",
@@ -46,6 +56,7 @@ export default function WordleInputBox() {
                         word: w,
                     })
                 });
+                // Displays different popup depending on the feedback from backend
                 const data = await res.json();
                 if ("status" in data && data.status === 200 && "gameover" in data && data.gameover !== 0) {
                     let title = "", text = "";
@@ -108,6 +119,7 @@ export default function WordleInputBox() {
         setWord(newWord)
     }
 
+    // Displays a working 5 grid inputbox
     return (
         <div className="flex justify-center">
             <form className="flex" onClick={handleFormClick}>

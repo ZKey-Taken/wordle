@@ -10,6 +10,7 @@ export default function DisplayGuesses() {
     });
 
     useEffect(() => {
+        // Obtain cookies from built-in js
         const parseCookies = (): Record<string, string> => {
             return document.cookie.split("; ").reduce((acc, curr) => {
                 const [key, val] = curr.split("=");
@@ -18,6 +19,7 @@ export default function DisplayGuesses() {
             }, {} as Record<string, string>);
         };
 
+        // Updates cookies if they changed
         const updateCookies = () => {
             const cookies = parseCookies();
 
@@ -45,11 +47,12 @@ export default function DisplayGuesses() {
         };
 
         updateCookies();
-        const interval = setInterval(updateCookies, 1000);
-
+        const interval = setInterval(updateCookies, 1000); // Refreshes page every second to integrate changes
         return () => clearInterval(interval);
     }, []);
 
+    // Loops every character of every word, displays each letter in its own box and color the background based
+    // on each character index's correctness
     return (
         <div className="flex-1">
             {guessWords.map((v, i1) => {

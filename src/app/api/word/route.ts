@@ -23,7 +23,16 @@ export async function GET() {
             (await cookie).set("WordIndex", randomIndex.toString(), {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 365,
-                httpOnly: true,
+                sameSite: "strict"
+            });
+            (await cookie).set("Guesses", JSON.stringify([]), {
+                path: '/',
+                maxAge: 60 * 60 * 24 * 365,
+                sameSite: "strict"
+            });
+            (await cookie).set("Correctness", JSON.stringify([]), {
+                path: '/',
+                maxAge: 60 * 60 * 24 * 365,
                 sameSite: "strict"
             });
         }
@@ -62,6 +71,19 @@ export async function POST(req: Request) {
             correctness[3] === "Green" && correctness[4] === "Green"
         ) {
             (await cookie).delete("WordIndex");
+            (await cookie).delete("Guesses");
+            (await cookie).delete("Correctness");
+        }
+
+        const guessesCookie = (await cookie).get("Guesses");
+        const correctnessCookie = (await cookie).get("Correctness");
+
+        if (typeof guessesCookie !== "undefined" && typeof correctnessCookie !== "undefined") {
+            const guessesArr: string[] = JSON.parse(guessesCookie.value);
+            const correctnessArr: string[][] = JSON.parse(correctnessCookie.value);
+
+            (await cookie).set("Guesses", JSON.stringify([...guessesArr, givenWord]));
+            (await cookie).set("Correctness", JSON.stringify([...correctnessArr, correctness]));
         }
 
         return NextResponse.json({ correctness: correctness, status: 200 });

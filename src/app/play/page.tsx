@@ -5,14 +5,6 @@ import { useEffect, useState } from "react";
 import DisplayGuesses from "../components/DisplayGuesses";
 
 export default function Play() {
-    const [words, setWords] = useState<string[]>([]);
-    const [correctness, setCorrectness] = useState<string[][]>([]);
-
-    const handleWord = (words: string[], correctness: string[][]) => {
-        setWords(words);
-        setCorrectness(correctness);
-    }
-
     useEffect(() => {
         const generateWord = async () => {
             try {
@@ -31,9 +23,9 @@ export default function Play() {
             <Link href={"/"} className="flex text-3xl text-center justify-center p-5">
                 Wordle
             </Link>
-            <WordleInputBox onWordEntered={handleWord} />
-            <hr className="mt-5" />
-            <DisplayGuesses guessWord={words} guessCorrectness={correctness} />
+            <WordleInputBox />
+            <hr className="my-5" />
+            <DisplayGuesses />
         </div>
     )
 }

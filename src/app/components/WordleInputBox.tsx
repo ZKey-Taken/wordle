@@ -1,11 +1,7 @@
 "use client"
 import { useRef, useState } from "react"
 
-interface WordleInputBoxProp {
-    onWordEntered: (words: string[], correctness: string[][]) => void,
-}
-
-export default function WordleInputBox({ onWordEntered }: WordleInputBoxProp) {
+export default function WordleInputBox() {
     const [word, setWord] = useState(["", "", "", "", ""]);
     const [guesses, setGuesses] = useState<string[]>([]);
     const [guessCorrectness, setGuessCorrectness] = useState<string[][]>([]);
@@ -13,7 +9,7 @@ export default function WordleInputBox({ onWordEntered }: WordleInputBoxProp) {
 
     const handleFormClick = (e: React.MouseEvent) => {
         e.preventDefault();
-        e.stopPropagation();
+        //e.stopPropagation();
 
         let index = 0;
         while (index < 4) {
@@ -43,11 +39,7 @@ export default function WordleInputBox({ onWordEntered }: WordleInputBoxProp) {
                 });
                 const data = await res.json();
                 if ("status" in data && data.status === 200 && "correctness" in data) {
-                    const newGuesses = [...guesses, w];
-                    const newCorrectness = [...guessCorrectness, data.correctness];
-                    setGuesses(newGuesses);
-                    setGuessCorrectness(newCorrectness);
-                    onWordEntered(newGuesses, newCorrectness);
+
                 }
             } catch (error) {
                 console.log(error);
@@ -61,7 +53,9 @@ export default function WordleInputBox({ onWordEntered }: WordleInputBoxProp) {
                 newWord[i] = "";
             }
         } else if (/^[a-zA-Z]$/.test(key)) {
-            if (word[idx] !== "") {
+            if (idx - 1 >= 0 && word[idx] === "") { // Ensures user types from left to right
+                return;
+            } else if (word[idx] !== "") {
                 idx++;
                 inputRefs.current[idx]?.focus();
             }

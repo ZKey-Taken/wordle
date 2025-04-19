@@ -1,14 +1,20 @@
-interface DisplayGuessesProp {
-    guessWord: string[];
-    guessCorrectness: string[][];
-}
+export default function DisplayGuesses() {
 
-export default function DisplayGuesses({ guessWord, guessCorrectness }: DisplayGuessesProp) {
-    console.log(guessWord);
-    console.log(guessCorrectness);
     return (
-        <div className="flex">
-            DisplayGuesses
+        <div className="flex-1">
+            {guessWord.map((v, i) => {
+                return (
+                    <div key={v} className="flex justify-center">
+                        {[v[0], v[1], v[2], v[3], v[4]].map((v, i) => {
+                            return (
+                                <div key={i} className="flex h-25 w-25 text-8xl text-center justify-center uppercase">
+                                    {v}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )
+            })}
         </div>
     )
 }

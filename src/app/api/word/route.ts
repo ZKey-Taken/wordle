@@ -6,31 +6,62 @@ import wordListPath from 'word-list';
 const wordArray = fs.readFileSync(wordListPath, 'utf8').split('\n');
 const fiveLetterWordArray = wordArray.filter(word => word.length === 5);
 
-export async function GET() {
-    const cookie = cookies();
-    const exists = (await cookie).get("WordIndex");
+const getWordData = (data: unknown) => {
+    if (data !== null && typeof data === "object" && "word" in data && typeof data.word === "string") {
+        return data.word.toString();
+    }
+    return null;
+}
 
-    if (typeof exists === "undefined") {
-        const randomIndex = Math.floor(Math.random() * wordArray.length);
-        (await cookie).set("WordIndex", randomIndex.toString(), {
-            path: '/',
-            maxAge: 60 * 60,
-            httpOnly: true,
-            sameSite: "strict"
-        });
+export async function GET() {
+    try {
+        const cookie = cookies();
+        const exists = (await cookie).get("WordIndex");
+
+        if (typeof exists === "undefined") {
+            const randomIndex = Math.floor(Math.random() * wordArray.length);
+            (await cookie).set("WordIndex", randomIndex.toString(), {
+                path: '/',
+                maxAge: 60 * 60 * 24 * 365,
+                httpOnly: true,
+                sameSite: "strict"
+            });
+        }
+        return NextResponse.json({ status: 200 });
+    } catch (error) {
+        console.log(error);
     }
 
-    return NextResponse.json({ status: 200 })
+    return NextResponse.json({ status: 500 });
 }
 
 export async function POST(req: Request) {
-    const cookie = cookies();
-    const index = (await cookie).get("WordIndex")?.value
-    if (typeof index === "undefined") {
-        return NextResponse.json({ status: 500 });
+    const correctness: string[] = [];
+    try {
+        const data = await req.json();
+        const givenWord = getWordData(data)?.toLowerCase();
+        const cookie = cookies();
+        const index = (await cookie).get("WordIndex")?.value
+        if (typeof index === "undefined" || index === null || typeof givenWord === "undefined" || givenWord === null) {
+            return NextResponse.json({ status: 400 });
+        }
+
+        const word = fiveLetterWordArray[parseInt(index)].toLowerCase();
+
+        for (let i = 0; i < 5; i++) {
+            if (word[i] === givenWord[i]) {
+                correctness[i] = "Green";
+            } else if (word.includes(givenWord[i])) {
+                correctness[i] = "Yellow";
+            } else {
+                correctness[i] = "Gray";
+            }
+        }
+
+        return NextResponse.json({ correctness: correctness, status: 200 });
+    } catch (error) {
+        console.log(error);
     }
 
-    const word = fiveLetterWordArray[parseInt(index)];
-
-    return NextResponse.json({ status: 200 });
+    return NextResponse.json({ correctness: correctness, status: 500 });
 }

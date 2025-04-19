@@ -13,6 +13,32 @@ const getWordData = (data: unknown) => {
     return null;
 }
 
+const checkWordle = (givenWord: string, correctWord: string) => {
+    const correctness: string[] = [];
+    const usedLetter = Array(5).fill(false);
+
+    for (let i = 0; i < 5; i++) {
+        if (correctWord[i] === givenWord[i]) {
+            correctness[i] = "Green";
+            usedLetter[i] = true;
+        }
+    }
+
+    for (let i = 0; i < 5; i++) {
+        if (correctness[i] === 'Gray' && !usedLetter[i]) {
+            for (let j = 0; j < 5; j++) {
+                if (givenWord[i] === correctWord[j] && !usedLetter[j]) {
+                    correctness[i] = 'Yellow';
+                    usedLetter[j] = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    return correctness
+}
+
 export async function GET() {
     try {
         const cookie = cookies();
@@ -46,26 +72,21 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-    const correctness: string[] = [];
+    let correctness: string[] = [];
     try {
         const data = await req.json();
         const givenWord = getWordData(data)?.toLowerCase();
         const cookie = cookies();
         const index = (await cookie).get("WordIndex")?.value;
+
         if (typeof index === "undefined" || typeof givenWord === "undefined") {
             return NextResponse.json({ correctness: correctness, status: 400 });
+        } else if (!fiveLetterWordArray.includes(givenWord)) {
+            return NextResponse.json({ correctness: correctness, notValidWord: true, status: 400 });
         }
-        const word = fiveLetterWordArray[parseInt(index)];
 
-        for (let i = 0; i < 5; i++) {
-            if (word[i] === givenWord[i]) {
-                correctness[i] = "Green";
-            } else if (word.includes(givenWord[i])) {
-                correctness[i] = "Yellow";
-            } else {
-                correctness[i] = "Gray";
-            }
-        }
+        const word = fiveLetterWordArray[parseInt(index)];
+        correctness = checkWordle(givenWord, word);
 
         let gameover = 0; // 0 = not over, 1 = win, 2 = lose
         if (correctness[0] === "Green" && correctness[1] === "Green" && correctness[2] === "Green" &&

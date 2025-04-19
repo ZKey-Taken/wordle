@@ -64,6 +64,13 @@ export default function WordleInputBox() {
                             router.push('/');
                         }
                     });
+                } else if ("notValidWord" in data && data.notValidWord) {
+                    Swal.fire({
+                        text: "Not a valid word",
+                        icon: "warning",
+                        showConfirmButton: false,
+                        timer: 1250,
+                    });
                 }
             } catch (error) {
                 console.log(error);

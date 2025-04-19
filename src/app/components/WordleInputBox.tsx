@@ -136,7 +136,7 @@ export default function WordleInputBox() {
                     return (
                         <div key={v}>
                             <input className={`flex h-25 w-25 text-8xl text-center uppercase font-black focus:outline-0 
-                            border-2 ${v === "5" ? "border-r-2" : "border-r-0"} border-amber-500`}
+                            border-4 ${v === "5" ? "border-r-4" : "border-r-0"} border-green-800`}
                                 id={v} maxLength={1} required autoFocus={i === 0}
                                 onKeyDown={(e) => { handleOnKeyDown(e, i) }}
                                 ref={(e) => { inputRefs.current[i] = e }}

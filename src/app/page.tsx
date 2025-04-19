@@ -15,7 +15,7 @@ const generateWord = async () => {
 
 export default function Home() {
   return (
-    <div className="flex flex-col h-screen text-center justify-center font-[family-name:var(--font-geist-sans)]">
+    <div className="flex flex-col h-screen text-center justify-center font-[family-name:var(--font-iceland)] font-bold">
       <div className="flex justify-center">
         <Image src={"/wordle.jpg"} alt="" width={400} height={400} priority />
       </div>

@@ -57,10 +57,10 @@ export default function DisplayGuesses() {
         <div className="flex-1">
             {guessWords.map((v, i1) => {
                 return (
-                    <div key={v} className="flex justify-center">
+                    <div key={v} className="flex justify-center mb-1">
                         {[v[0], v[1], v[2], v[3], v[4]].map((v, i2) => {
                             return (
-                                <div key={i2} className={`flex h-25 w-25 text-8xl text-center justify-center uppercase border-y-2 border-black
+                                <div key={i2} className={`flex h-25 w-25 text-8xl font-bold text-center justify-center uppercase border-y-2 border-x-1 border-black rounded-2xl
                                     ${correctness[i1][i2] === "Green" ? "bg-green-600" : ""}
                                     ${correctness[i1][i2] === "Yellow" ? "bg-yellow-600" : ""}
                                     ${correctness[i1][i2] === "Gray" ? "bg-gray-600" : ""}

@@ -8,7 +8,7 @@ const fiveLetterWordArray = wordArray.filter(word => word.length === 5);
 
 const getWordData = (data: unknown) => {
     if (data !== null && typeof data === "object" && "word" in data && typeof data.word === "string") {
-        return data.word.toString();
+        return data.word;
     }
     return null;
 }
@@ -19,7 +19,7 @@ export async function GET() {
         const exists = (await cookie).get("WordIndex");
 
         if (typeof exists === "undefined") {
-            const randomIndex = Math.floor(Math.random() * wordArray.length);
+            const randomIndex = Math.floor(Math.random() * fiveLetterWordArray.length);
             (await cookie).set("WordIndex", randomIndex.toString(), {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 365,
@@ -27,6 +27,7 @@ export async function GET() {
                 sameSite: "strict"
             });
         }
+
         return NextResponse.json({ status: 200 });
     } catch (error) {
         console.log(error);
@@ -39,19 +40,18 @@ export async function POST(req: Request) {
     const correctness: string[] = [];
     try {
         const data = await req.json();
-        const givenWord = getWordData(data)?.toLowerCase();
+        const givenWord = getWordData(data);
         const cookie = cookies();
         const index = (await cookie).get("WordIndex")?.value
-        if (typeof index === "undefined" || index === null || typeof givenWord === "undefined" || givenWord === null) {
-            return NextResponse.json({ status: 400 });
+        if (typeof index === "undefined" || givenWord === null) {
+            return NextResponse.json({ correctness: correctness, status: 400 });
         }
-
-        const word = fiveLetterWordArray[parseInt(index)].toLowerCase();
+        const word = fiveLetterWordArray[parseInt(index)];
 
         for (let i = 0; i < 5; i++) {
-            if (word[i] === givenWord[i]) {
+            if (word[i] === givenWord[i].toLowerCase()) {
                 correctness[i] = "Green";
-            } else if (word.includes(givenWord[i])) {
+            } else if (word.includes(givenWord[i].toLowerCase())) {
                 correctness[i] = "Yellow";
             } else {
                 correctness[i] = "Gray";

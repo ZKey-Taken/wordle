@@ -25,17 +25,21 @@ export default function WordleInputBox() {
 
         if (key === "Enter" && word[4] !== "") {
             console.log("Enter pressed!");
-            console.log("word:", word);
+            console.log("word:", word.join("").substring(0, 5));
             try {
                 const res = await fetch("/api/word", {
-                    method: "GET",
+                    method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        word: word
+                        word: word.join("").substring(0, 5),
                     })
                 });
+                const data = await res.json();
+                if ("status" in data && data.status === 200) {
+                    console.log("Correctness:", data?.correctness);
+                }
             } catch (error) {
                 console.log(error);
             }

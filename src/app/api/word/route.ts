@@ -67,12 +67,11 @@ export async function POST(req: Request) {
             }
         }
 
+        let gameover = false;
         if (correctness[0] === "Green" && correctness[1] === "Green" && correctness[2] === "Green" &&
             correctness[3] === "Green" && correctness[4] === "Green"
         ) {
-            (await cookie).delete("WordIndex");
-            (await cookie).delete("Guesses");
-            (await cookie).delete("Correctness");
+            gameover = true;
         }
 
         const guessesCookie = (await cookie).get("Guesses");
@@ -82,11 +81,22 @@ export async function POST(req: Request) {
             const guessesArr: string[] = JSON.parse(guessesCookie.value);
             const correctnessArr: string[][] = JSON.parse(correctnessCookie.value);
 
+            if (guessesArr.length === 5) {
+                gameover = true;
+            }
+
             (await cookie).set("Guesses", JSON.stringify([...guessesArr, givenWord]));
             (await cookie).set("Correctness", JSON.stringify([...correctnessArr, correctness]));
+
+            if (gameover) {
+                (await cookie).delete("WordIndex");
+                (await cookie).delete("Guesses");
+                (await cookie).delete("Correctness");
+                return NextResponse.json({ guessesArr: guessesArr, correctnessArr: correctnessArr, gameover: gameover, status: 200 });
+            }
         }
 
-        return NextResponse.json({ correctness: correctness, status: 200 });
+        return NextResponse.json({ correctness: correctness, gameover: gameover, status: 200 });
     } catch (error) {
         console.log(error);
     }

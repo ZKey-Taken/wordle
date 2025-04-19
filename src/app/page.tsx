@@ -11,7 +11,6 @@ export default function Home() {
       console.log(error);
     }
   }
-  generateWord();
 
   return (
     <div className="flex flex-col h-screen text-center justify-center font-[family-name:var(--font-geist-sans)]">

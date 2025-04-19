@@ -36,7 +36,7 @@ export default function WordleInputBox() {
                     })
                 });
                 const data = await res.json();
-                if ("status" in data && data.status === 200 && "correctness" in data) {
+                if ("status" in data && data.status === 200 && "gameover" in data && data.gameover) {
 
                 }
             } catch (error) {

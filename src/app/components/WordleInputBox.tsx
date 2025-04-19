@@ -3,13 +3,11 @@ import { useRef, useState } from "react"
 
 export default function WordleInputBox() {
     const [word, setWord] = useState(["", "", "", "", ""]);
-    const [guesses, setGuesses] = useState<string[]>([]);
-    const [guessCorrectness, setGuessCorrectness] = useState<string[][]>([]);
     const inputRefs = useRef<HTMLInputElement[] | null[]>([]);
 
     const handleFormClick = (e: React.MouseEvent) => {
         e.preventDefault();
-        //e.stopPropagation();
+        e.stopPropagation();
 
         let index = 0;
         while (index < 4) {
@@ -25,7 +23,7 @@ export default function WordleInputBox() {
         const key = e.key;
         const newWord = [...word]
 
-        if (key === "Enter" && word[4] !== "" && guesses.length < 6) {
+        if (key === "Enter" && word[4] !== "") {
             try {
                 const w = word.join("").substring(0, 5);
                 const res = await fetch("/api/word", {

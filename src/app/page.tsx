@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 // Send GET api call to backend to generate a random word
-export const generateWord = async () => {
+const generateWord = async () => {
   try {
     await fetch("/api/word", {
       method: "GET"

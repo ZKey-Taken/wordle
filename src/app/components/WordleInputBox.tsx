@@ -1,8 +1,14 @@
 "use client"
 import { useRef, useState } from "react"
 
-export default function WordleInputBox() {
-    const [word, setWord] = useState(["", "", "", "", ""])
+interface WordleInputBoxProp {
+    onWordEntered: (words: string[], correctness: string[][]) => void,
+}
+
+export default function WordleInputBox({ onWordEntered }: WordleInputBoxProp) {
+    const [word, setWord] = useState(["", "", "", "", ""]);
+    const [guesses, setGuesses] = useState<string[]>([]);
+    const [guessCorrectness, setGuessCorrectness] = useState<string[][]>([]);
     const inputRefs = useRef<HTMLInputElement[] | null[]>([]);
 
     const handleFormClick = (e: React.MouseEvent) => {
@@ -23,22 +29,25 @@ export default function WordleInputBox() {
         const key = e.key;
         const newWord = [...word]
 
-        if (key === "Enter" && word[4] !== "") {
-            console.log("Enter pressed!");
-            console.log("word:", word.join("").substring(0, 5));
+        if (key === "Enter" && word[4] !== "" && guesses.length < 6) {
             try {
+                const w = word.join("").substring(0, 5);
                 const res = await fetch("/api/word", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        word: word.join("").substring(0, 5),
+                        word: w,
                     })
                 });
                 const data = await res.json();
-                if ("status" in data && data.status === 200) {
-                    console.log("Correctness:", data?.correctness);
+                if ("status" in data && data.status === 200 && "correctness" in data) {
+                    const newGuesses = [...guesses, w];
+                    const newCorrectness = [...guessCorrectness, data.correctness];
+                    setGuesses(newGuesses);
+                    setGuessCorrectness(newCorrectness);
+                    onWordEntered(newGuesses, newCorrectness);
                 }
             } catch (error) {
                 console.log(error);

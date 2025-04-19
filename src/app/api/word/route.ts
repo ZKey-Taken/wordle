@@ -40,22 +40,28 @@ export async function POST(req: Request) {
     const correctness: string[] = [];
     try {
         const data = await req.json();
-        const givenWord = getWordData(data);
+        const givenWord = getWordData(data)?.toLowerCase();
         const cookie = cookies();
-        const index = (await cookie).get("WordIndex")?.value
-        if (typeof index === "undefined" || givenWord === null) {
+        const index = (await cookie).get("WordIndex")?.value;
+        if (typeof index === "undefined" || typeof givenWord === "undefined") {
             return NextResponse.json({ correctness: correctness, status: 400 });
         }
         const word = fiveLetterWordArray[parseInt(index)];
 
         for (let i = 0; i < 5; i++) {
-            if (word[i] === givenWord[i].toLowerCase()) {
+            if (word[i] === givenWord[i]) {
                 correctness[i] = "Green";
-            } else if (word.includes(givenWord[i].toLowerCase())) {
+            } else if (word.includes(givenWord[i])) {
                 correctness[i] = "Yellow";
             } else {
                 correctness[i] = "Gray";
             }
+        }
+
+        if (correctness[0] === "Green" && correctness[1] === "Green" && correctness[2] === "Green" &&
+            correctness[3] === "Green" && correctness[4] === "Green"
+        ) {
+            (await cookie).delete("WordIndex");
         }
 
         return NextResponse.json({ correctness: correctness, status: 200 });

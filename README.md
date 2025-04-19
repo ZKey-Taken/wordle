@@ -1,8 +1,8 @@
-## Infinite Wordle
+# Infinite Wordle
 
 A place where you can keep playing Wordle until you get bored of it.
 
-# How to play
+## How to play
 
 You get 6 tries to guess a randomly generated word (only the top 30000 most popular words, nothing obscure), each guess has different feedbacks:
 
@@ -13,11 +13,11 @@ Gray: The character doesn't exist in the word
 Based off of these feedbacks, use your big brain and try to guess the secret word.
 Good luck and have fun!
 
-# Main tech stacks used to build this:
+## Main tech stacks used to build this:
 
 - NextJS
 - React
 - Typescript
 - Tailwind CSS
 
-Website URL: (TBD)
+Website URL: https://zkey-wordle.vercel.app/

@@ -5,7 +5,7 @@ import DisplayGuesses from "../components/DisplayGuesses";
 export default function Play() {
     return (
         <div className="flex flex-col h-screen w-full">
-            <Link href={"/"} className="flex text-3xl text-center justify-center p-5">
+            <Link href={"/"} className="flex text-3xl text-center font-blod justify-center p-5">
                 Wordle
             </Link>
             <WordleInputBox />

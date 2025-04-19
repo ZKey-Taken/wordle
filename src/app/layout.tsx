@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ziqi's Wordle",
+  title: "Infinite Wordle",
 };
 
 export default function RootLayout({

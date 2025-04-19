@@ -11,7 +11,6 @@ export default function WordleInputBox() {
 
     const handleFormClick = (e: React.MouseEvent) => {
         e.preventDefault();
-        e.stopPropagation();
 
         let index = 0;
         while (index < 4) {
@@ -28,6 +27,14 @@ export default function WordleInputBox() {
         const newWord = [...word]
 
         if (key === "Enter" && word[4] !== "") {
+            inputRefs.current.forEach((input, i) => {
+                if (input) {
+                    input.value = "";
+                    newWord[i] = "";
+                }
+            });
+            inputRefs.current[0]?.focus();
+
             try {
                 const w = word.join("").substring(0, 5);
                 const res = await fetch("/api/word", {
@@ -71,6 +78,13 @@ export default function WordleInputBox() {
                         showConfirmButton: false,
                         timer: 1250,
                     });
+                } else if ("sameWord" in data && data.sameWord) {
+                    Swal.fire({
+                        text: "Already guessed that word",
+                        icon: "warning",
+                        showConfirmButton: false,
+                        timer: 1500,
+                    });
                 }
             } catch (error) {
                 console.log(error);
@@ -84,9 +98,7 @@ export default function WordleInputBox() {
                 newWord[i] = "";
             }
         } else if (/^[a-zA-Z]$/.test(key)) {
-            if (idx - 1 >= 0 && word[idx] === "") { // Ensures user types from left to right
-                return;
-            } else if (word[idx] !== "") {
+            if (word[idx] !== "") {
                 idx++;
                 inputRefs.current[idx]?.focus();
             }

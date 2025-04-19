@@ -14,7 +14,7 @@ const getWordData = (data: unknown) => {
 }
 
 const checkWordle = (givenWord: string, correctWord: string) => {
-    const correctness: string[] = [];
+    const correctness: string[] = Array(5).fill("Gray");
     const usedLetter = Array(5).fill(false);
 
     for (let i = 0; i < 5; i++) {
@@ -25,10 +25,10 @@ const checkWordle = (givenWord: string, correctWord: string) => {
     }
 
     for (let i = 0; i < 5; i++) {
-        if (correctness[i] === 'Gray' && !usedLetter[i]) {
+        if (correctness[i] === "Gray" && !usedLetter[i]) {
             for (let j = 0; j < 5; j++) {
                 if (givenWord[i] === correctWord[j] && !usedLetter[j]) {
-                    correctness[i] = 'Yellow';
+                    correctness[i] = "Yellow";
                     usedLetter[j] = true;
                     break;
                 }
@@ -78,14 +78,25 @@ export async function POST(req: Request) {
         const givenWord = getWordData(data)?.toLowerCase();
         const cookie = cookies();
         const index = (await cookie).get("WordIndex")?.value;
+        const guessesCookie = (await cookie).get("Guesses")?.value;
+        const correctnessCookie = (await cookie).get("Correctness")?.value;
 
-        if (typeof index === "undefined" || typeof givenWord === "undefined") {
+        if (typeof index === "undefined" || typeof givenWord === "undefined"
+            || typeof guessesCookie === "undefined" || typeof correctnessCookie === "undefined"
+        ) {
             return NextResponse.json({ correctness: correctness, status: 400 });
-        } else if (!fiveLetterWordArray.includes(givenWord)) {
-            return NextResponse.json({ correctness: correctness, notValidWord: true, status: 400 });
         }
 
+        const guessesArr: string[] = JSON.parse(guessesCookie);
+        const correctnessArr: string[][] = JSON.parse(correctnessCookie);
         const word = fiveLetterWordArray[parseInt(index)];
+
+        if (!fiveLetterWordArray.includes(givenWord)) {
+            return NextResponse.json({ correctness: correctness, notValidWord: true, status: 400 });
+        } else if (guessesArr.includes(givenWord)) {
+            return NextResponse.json({ correctness: correctness, sameWord: true, status: 400 });
+        }
+
         correctness = checkWordle(givenWord, word);
 
         let gameover = 0; // 0 = not over, 1 = win, 2 = lose
@@ -93,28 +104,18 @@ export async function POST(req: Request) {
             correctness[3] === "Green" && correctness[4] === "Green"
         ) {
             gameover = 1;
+        } else if (guessesArr.length === 5 && gameover !== 1) {
+            gameover = 2;
         }
 
-        const guessesCookie = (await cookie).get("Guesses");
-        const correctnessCookie = (await cookie).get("Correctness");
+        (await cookie).set("Guesses", JSON.stringify([...guessesArr, givenWord]));
+        (await cookie).set("Correctness", JSON.stringify([...correctnessArr, correctness]));
 
-        if (typeof guessesCookie !== "undefined" && typeof correctnessCookie !== "undefined") {
-            const guessesArr: string[] = JSON.parse(guessesCookie.value);
-            const correctnessArr: string[][] = JSON.parse(correctnessCookie.value);
-
-            if (guessesArr.length === 5 && gameover !== 1) {
-                gameover = 2;
-            }
-
-            (await cookie).set("Guesses", JSON.stringify([...guessesArr, givenWord]));
-            (await cookie).set("Correctness", JSON.stringify([...correctnessArr, correctness]));
-
-            if (gameover !== 0) {
-                (await cookie).delete("WordIndex");
-                (await cookie).delete("Guesses");
-                (await cookie).delete("Correctness");
-                return NextResponse.json({ guesses: guessesArr.length.toString(), word: word, gameover: gameover, status: 200 });
-            }
+        if (gameover !== 0) {
+            (await cookie).delete("WordIndex");
+            (await cookie).delete("Guesses");
+            (await cookie).delete("Correctness");
+            return NextResponse.json({ guesses: guessesArr.length.toString(), word: word, gameover: gameover, status: 200 });
         }
 
         return NextResponse.json({ correctness: correctness, gameover: 0, status: 200 });
@@ -124,9 +125,3 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ correctness: correctness, status: 500 });
 }
-
-/* Bugs to fix:
-Enters an invalid 5 letter word
-Enters the same word multiple times
-Yellow is too vague and incorrect
-*/

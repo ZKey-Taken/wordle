@@ -59,6 +59,7 @@ export default function WordleInputBox() {
                     Swal.fire({
                         title: title,
                         text: text,
+                        icon: data.gameover === 1 ? 'success' : 'error',
                         confirmButtonText: "Play again?",
                         showDenyButton: true,
                         denyButtonText: "Back to Home",

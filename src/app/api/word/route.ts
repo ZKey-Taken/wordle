@@ -1,10 +1,9 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import fs from 'node:fs';
-import wordListPath from 'word-list';
+import { words } from "popular-english-words/words.js";
 
-const wordArray = fs.readFileSync(wordListPath, 'utf8').split('\n');
-const fiveLetterWordArray = wordArray.filter(word => word.length === 5);
+const guessWords = words.slice(0, 80000);
+const fiveLetterWordArray = words.slice(0, 20000).filter(word => word.length === 5);
 
 const getWordData = (data: unknown) => {
     if (data !== null && typeof data === "object" && "word" in data && typeof data.word === "string") {
@@ -91,7 +90,7 @@ export async function POST(req: Request) {
         const correctnessArr: string[][] = JSON.parse(correctnessCookie);
         const word = fiveLetterWordArray[parseInt(index)];
 
-        if (!fiveLetterWordArray.includes(givenWord)) {
+        if (!guessWords.includes(givenWord)) {
             return NextResponse.json({ correctness: correctness, notValidWord: true, status: 400 });
         } else if (guessesArr.includes(givenWord)) {
             return NextResponse.json({ correctness: correctness, sameWord: true, status: 400 });
@@ -115,7 +114,7 @@ export async function POST(req: Request) {
             (await cookie).delete("WordIndex");
             (await cookie).delete("Guesses");
             (await cookie).delete("Correctness");
-            return NextResponse.json({ guesses: guessesArr.length.toString(), word: word, gameover: gameover, status: 200 });
+            return NextResponse.json({ guesses: (guessesArr.length + 1).toString(), word: word, gameover: gameover, status: 200 });
         }
 
         return NextResponse.json({ correctness: correctness, gameover: 0, status: 200 });

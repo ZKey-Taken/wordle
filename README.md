@@ -21,3 +21,5 @@ Good luck and have fun!
 - Tailwind CSS
 
 Website URL: https://zkey-wordle.vercel.app/
+
+**Must enable cookies in order to play

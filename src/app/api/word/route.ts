@@ -45,20 +45,26 @@ const checkWordle = (givenWord: string, correctWord: string) => {
 export async function GET() {
     try {
         const cookie = cookies();
-        const exists = (await cookie).get("WordIndex");
+        const wordIndexExists = (await cookie).get("WordIndex");
+        const guessesExists = (await cookie).get("Guesses");
+        const correctnessExists = (await cookie).get("Correctness");
 
-        if (typeof exists === "undefined") {
+        if (typeof wordIndexExists === "undefined") {
             const randomIndex = Math.floor(Math.random() * fiveLetterWordArray.length);
             (await cookie).set("WordIndex", randomIndex.toString(), {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 365,
                 sameSite: "strict"
             });
+        }
+        if (typeof guessesExists === 'undefined') {
             (await cookie).set("Guesses", JSON.stringify([]), {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 365,
                 sameSite: "strict"
             });
+        }
+        if (typeof correctnessExists === 'undefined') {
             (await cookie).set("Correctness", JSON.stringify([]), {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 365,

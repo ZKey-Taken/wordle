@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { words } from "popular-english-words/words.js";
 
-const guessWords = words.slice(0, 80000);
-const fiveLetterWordArray = words.slice(0, 20000).filter(word => word.length === 5);
+const fiveLetterWords = words.filter(word => word.length === 5);
+const wordlePool = fiveLetterWords.slice(0, 25000);
 
 // Verifies data and ensure it's a word that's a string
 const getWordData = (data: unknown) => {
@@ -13,31 +13,45 @@ const getWordData = (data: unknown) => {
     return null;
 }
 
-// Runs for loops to construct an array for feedback, green for correct, yellow for exists, and gray for not exist
+// Runs a two-pass Wordle check:
+// 1) Mark Greens (correct position). 2) For remaining positions, mark Yellows limited by remaining occurrences in correctWord.
+// This properly handles repeated-letter edge cases.
 const checkWordle = (givenWord: string, correctWord: string) => {
-    const correctness: string[] = Array(5).fill("Gray");
-    const usedLetter = Array(5).fill(false);
+    // Normalize inputs to lower-case strings
+    const gw = (givenWord || "").toLowerCase();
+    const cw = (correctWord || "").toLowerCase();
 
-    for (let i = 0; i < 5; i++) {
-        if (correctWord[i] === givenWord[i]) {
+    // If lengths aren't 5, operate on up to 5 chars but ensure we return 5 results.
+    const L = 5;
+    const correctness: string[] = Array(L).fill("Gray");
+
+    // First pass: mark greens and count remaining letters in the answer
+    const remainingCounts: Record<string, number> = {};
+    for (let i = 0; i < L; i++) {
+        const gChar = gw[i] || "";
+        const cChar = cw[i] || "";
+        if (gChar && cChar && gChar === cChar) {
             correctness[i] = "Green";
-            usedLetter[i] = true;
-        }
-    }
-
-    for (let i = 0; i < 5; i++) {
-        if (correctness[i] === "Gray" && !usedLetter[i]) {
-            for (let j = 0; j < 5; j++) {
-                if (givenWord[i] === correctWord[j] && !usedLetter[j]) {
-                    correctness[i] = "Yellow";
-                    usedLetter[j] = true;
-                    break;
-                }
+        } else {
+            // count this answer letter for potential yellow matches
+            if (cChar) {
+                remainingCounts[cChar] = (remainingCounts[cChar] || 0) + 1;
             }
         }
     }
 
-    return correctness
+    // Second pass: for non-green guessed positions, assign Yellow if the letter exists in remainingCounts
+    for (let i = 0; i < L; i++) {
+        if (correctness[i] !== "Green") {
+            const gChar = gw[i] || "";
+            if (gChar && remainingCounts[gChar] > 0) {
+                correctness[i] = "Yellow";
+                remainingCounts[gChar] -= 1;
+            }
+        }
+    }
+
+    return correctness;
 }
 
 // GET sets up the randomized index we will use to identify out word. The word list is static so we can just
@@ -50,7 +64,7 @@ export async function GET() {
         const correctnessExists = (await cookie).get("Correctness");
 
         if (typeof wordIndexExists === "undefined") {
-            const randomIndex = Math.floor(Math.random() * fiveLetterWordArray.length);
+            const randomIndex = Math.floor(Math.random() * wordlePool.length);
             (await cookie).set("WordIndex", randomIndex.toString(), {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 365,
@@ -104,9 +118,9 @@ export async function POST(req: Request) {
 
         const guessesArr: string[] = JSON.parse(guessesCookie);
         const correctnessArr: string[][] = JSON.parse(correctnessCookie);
-        const word = fiveLetterWordArray[parseInt(index)];
+        const word = wordlePool[parseInt(index)];
 
-        if (!guessWords.includes(givenWord)) { // Not a valid word
+        if (!fiveLetterWords.includes(givenWord)) { // Not a valid word
             return NextResponse.json({ correctness: correctness, notValidWord: true, status: 400 });
         } else if (guessesArr.includes(givenWord)) { // Already guessed this word
             return NextResponse.json({ correctness: correctness, sameWord: true, status: 400 });

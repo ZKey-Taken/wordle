@@ -3,7 +3,19 @@ import { NextResponse } from "next/server";
 import { words } from "popular-english-words/words.js";
 
 const fiveLetterWords = words.filter(word => word.length === 5);
-const wordlePool = fiveLetterWords.slice(0, 25000);
+const wordPoolLength = 5000;
+
+const startIdx = {
+    "easy": 0,
+    "medium": wordPoolLength,
+    "hard": wordPoolLength * 2,
+}
+
+const endIdx = {
+    "easy": wordPoolLength + startIdx.easy,
+    "medium": wordPoolLength + startIdx.medium,
+    "hard": wordPoolLength + startIdx.hard,
+}
 
 // Verifies data and ensure it's a word that's a string
 const getWordData = (data: unknown) => {
@@ -56,15 +68,27 @@ const checkWordle = (givenWord: string, correctWord: string) => {
 
 // GET sets up the randomized index we will use to identify out word. The word list is static so we can just
 // store an index and get the word when needed, frontend/user won't know the word.
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const { searchParams } = new URL(req.url);
+        const difficulty = searchParams.get('difficulty');
+
         const cookie = cookies();
         const wordIndexExists = (await cookie).get("WordIndex");
         const guessesExists = (await cookie).get("Guesses");
         const correctnessExists = (await cookie).get("Correctness");
+        let start = startIdx.easy, end = endIdx.easy;
+
+        if (difficulty === "medium") {
+            start = startIdx.medium
+            end = endIdx.medium
+        } else if (difficulty === "hard") {
+            start = startIdx.hard
+            end = endIdx.hard
+        }
 
         if (typeof wordIndexExists === "undefined") {
-            const randomIndex = Math.floor(Math.random() * wordlePool.length);
+            const randomIndex = Math.floor(Math.random() * (end - start + 1)) + start;
             (await cookie).set("WordIndex", randomIndex.toString(), {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 365,
@@ -118,7 +142,7 @@ export async function POST(req: Request) {
 
         const guessesArr: string[] = JSON.parse(guessesCookie);
         const correctnessArr: string[][] = JSON.parse(correctnessCookie);
-        const word = wordlePool[parseInt(index)];
+        const word = fiveLetterWords[parseInt(index)];
 
         if (!fiveLetterWords.includes(givenWord)) { // Not a valid word
             return NextResponse.json({ correctness: correctness, notValidWord: true, status: 400 });

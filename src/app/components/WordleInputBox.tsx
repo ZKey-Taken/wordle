@@ -2,16 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react"
 import Swal from "sweetalert2";
-
-const generateWord = async () => {
-    try {
-        await fetch("/api/word", {
-            method: "GET"
-        });
-    } catch (error) {
-        console.log(error);
-    }
-}
+import { pickDifficulty } from "../page";
 
 export default function WordleInputBox() {
     // Uses useState to control the word and useRef to focus() to each input box.
@@ -86,7 +77,7 @@ export default function WordleInputBox() {
                         denyButtonColor: "#3085d6",
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            generateWord();
+                            pickDifficulty();
                             router.refresh();
                         } else {
                             router.push('/');

@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react"
 import Swal from "sweetalert2";
-import { pickDifficulty } from "../page";
+import { pickDifficulty } from "../utils";
 
 export default function WordleInputBox() {
     // Uses useState to control the word and useRef to focus() to each input box.
